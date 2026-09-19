@@ -1,7 +1,10 @@
 name: beyond-all-reason
 base: core24
+title: Beyond All Reason
 version: '0.16.2'
 summary: Beyond All Reason - a free, open-source real-time strategy game
+license: GPL-2.0-or-later
+contact: https://www.beyondallreason.info/
 description: |
   Beyond All Reason (BAR) is a free and open-source, community-made
   real-time strategy game built on the Recoil (Spring RTS) engine, with
@@ -26,7 +29,7 @@ apps:
   beyond-all-reason:
     command: bar-lobby-wrapper
     extensions: [gnome]
-    desktop: bar-lobby.desktop
+    desktop: usr/share/applications/bar-lobby.desktop
     plugs:
       - opengl
       - wayland
@@ -51,9 +54,15 @@ parts:
       # can't use setuid binaries, so run Chromium with --no-sandbox instead
       # (see the wrapper's exec line) and drop the now-unusable binary.
       rm -f "$SNAPCRAFT_PART_INSTALL"/chrome-sandbox
-    organize:
-      bar-lobby.desktop: usr/share/applications/bar-lobby.desktop
-      bar-lobby.png: usr/share/icons/hicolor/512x512/apps/bar-lobby.png
+      # The AppImage only ships its .desktop file at the root; install it
+      # under the standard FHS path and point Exec/Icon at the in-snap
+      # wrapper/icon (the upstream file points at absolute host paths).
+      mkdir -p "$SNAPCRAFT_PART_INSTALL"/usr/share/applications
+      sed \
+        -e 's|^Exec=.*|Exec=bar-lobby-wrapper %U|' \
+        -e 's|^Icon=.*|Icon=${SNAP}/usr/share/icons/hicolor/512x512/apps/bar-lobby.png|' \
+        "$SNAPCRAFT_PART_INSTALL"/bar-lobby.desktop \
+        > "$SNAPCRAFT_PART_INSTALL"/usr/share/applications/bar-lobby.desktop
     stage-packages:
       - libnss3
       - libnspr4
@@ -79,14 +88,3 @@ parts:
       bar-lobby-wrapper: bar-lobby-wrapper
     stage:
       - bar-lobby-wrapper
-
-  desktop-fixup:
-    after: [bar-lobby, wrapper]
-    plugin: nil
-    override-build: |
-      craftctl default
-      # Point the desktop file's Exec/Icon at the in-snap wrapper/icon.
-      sed -i \
-        -e 's|^Exec=.*|Exec=bar-lobby-wrapper %U|' \
-        -e 's|^Icon=.*|Icon=${SNAP}/usr/share/icons/hicolor/512x512/apps/bar-lobby.png|' \
-        "$SNAPCRAFT_PRIME/usr/share/applications/bar-lobby.desktop"
