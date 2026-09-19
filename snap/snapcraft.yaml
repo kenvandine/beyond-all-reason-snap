@@ -42,6 +42,8 @@ apps:
       - network-bind
       - home
       - removable-media
+    environment:
+      HOME: $SNAP_USER_COMMON
 
 parts:
   bar-lobby:
