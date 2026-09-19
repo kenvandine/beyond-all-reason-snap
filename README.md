@@ -44,6 +44,16 @@ sudo snap install --dangerous /tmp/beyond-all-reason_*.snap
 sudo snap connect beyond-all-reason:joystick
 ```
 
+On devices with a custom compositor/session (e.g. a `gamepad-shell`-style
+snap instead of a normal desktop session), the `wayland`/`x11` plugs may
+not auto-connect to that compositor's slots. If the app fails to find a
+display, connect them manually:
+
+```bash
+sudo snap connect beyond-all-reason:wayland gamepad-shell:wayland
+sudo snap connect beyond-all-reason:x11 gamepad-shell:x11
+```
+
 First launch requires network access for login and to download the Recoil
 engine + game content.
 
