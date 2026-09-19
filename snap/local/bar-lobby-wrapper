@@ -8,4 +8,22 @@ export XDG_DATA_HOME="$SNAP_USER_DATA/.local/share"
 export XDG_CACHE_HOME="$SNAP_USER_DATA/.cache"
 mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
 
-exec "$SNAP/bar-lobby" --no-sandbox "$@"
+# Electron/Chromium defaults to the X11 Ozone backend even on pure-Wayland
+# systems, where there's no Xwayland; force Wayland when a compositor
+# socket is available, otherwise let it fall back to X11 automatically.
+# This base has no host-provided XKB keymap data (it's a Wayland-only
+# device image), so bundle xkb-data (see the bar-lobby part) and point
+# libxkbcommon at it directly.
+export XKB_CONFIG_ROOT="$SNAP/usr/share/X11/xkb"
+
+if [ -n "$WAYLAND_DISPLAY" ]; then
+    set -- --ozone-platform=wayland --enable-features=WaylandWindowDecorations "$@"
+else
+    set -- --ozone-platform-hint=auto "$@"
+fi
+
+# AppArmor only allows this snap to use /dev/shm/snap.beyond-all-reason.**,
+# but Chromium's default shared-memory files are named
+# /dev/shm/.org.chromium.Chromium.*, which doesn't match and gets denied.
+# --disable-dev-shm-usage makes it use /tmp (private per-snap) instead.
+exec "$SNAP/bar-lobby" --no-sandbox --disable-dev-shm-usage "$@"

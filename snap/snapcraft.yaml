@@ -50,6 +50,11 @@ parts:
       chmod +x "$SNAPCRAFT_PART_SRC"/BeyondAllReason-*.AppImage
       "$SNAPCRAFT_PART_SRC"/BeyondAllReason-*.AppImage --appimage-extract
       cp -a squashfs-root/. "$SNAPCRAFT_PART_INSTALL"/
+      # The AppImage's own squashfs preserves some dirs (e.g. resources/)
+      # as 0700/root-only, which blocks the non-root snap process (uid
+      # 1000) from reading app.asar etc. Make everything at least
+      # world-readable/traversable.
+      chmod -R a+rX "$SNAPCRAFT_PART_INSTALL"
       # electron-builder ships a setuid sandbox helper; strict-mode snaps
       # can't use setuid binaries, so run Chromium with --no-sandbox instead
       # (see the wrapper's exec line) and drop the now-unusable binary.
@@ -64,6 +69,7 @@ parts:
         "$SNAPCRAFT_PART_INSTALL"/bar-lobby.desktop \
         > "$SNAPCRAFT_PART_INSTALL"/usr/share/applications/bar-lobby.desktop
     stage-packages:
+      - xkb-data
       - libnss3
       - libnspr4
       - libatk1.0-0t64
