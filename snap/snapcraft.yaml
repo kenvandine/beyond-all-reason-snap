@@ -4,7 +4,9 @@ title: Beyond All Reason
 version: '0.16.2'
 summary: Beyond All Reason - a free, open-source real-time strategy game
 license: GPL-2.0-or-later
-contact: https://www.beyondallreason.info/
+contact: https://github.com/kenvandine/beyonad-all-reason/issues
+issues: https://github.com/kenvandine/beyonad-all-reason/issues
+website: https://www.beyondallreason.info/
 description: |
   Beyond All Reason (BAR) is a free and open-source, community-made
   real-time strategy game built on the Recoil (Spring RTS) engine, with
