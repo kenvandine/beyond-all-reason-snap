@@ -1,0 +1,92 @@
+name: beyond-all-reason
+base: core24
+version: '0.16.2'
+summary: Beyond All Reason - a free, open-source real-time strategy game
+description: |
+  Beyond All Reason (BAR) is a free and open-source, community-made
+  real-time strategy game built on the Recoil (Spring RTS) engine, with
+  original open assets. This snap packages the official BAR Lobby
+  (Electron-based launcher/client), which handles logging in, matchmaking,
+  and downloading/updating the Recoil engine and game content on first run
+  and whenever new versions are published.
+
+  Because the Recoil engine and BAR's maps/game content are updated
+  frequently and independently of the lobby release cycle, packaging the
+  official launcher (rather than freezing an engine/content version inside
+  the snap) is the most maintainable approach, matching how the upstream
+  project itself recommends distributing BAR.
+grade: stable
+confinement: strict
+compression: lzo
+
+platforms:
+  amd64:
+
+apps:
+  beyond-all-reason:
+    command: bar-lobby-wrapper
+    extensions: [gnome]
+    desktop: bar-lobby.desktop
+    plugs:
+      - opengl
+      - wayland
+      - x11
+      - audio-playback
+      - joystick
+      - network
+      - network-bind
+      - home
+      - removable-media
+
+parts:
+  bar-lobby:
+    plugin: dump
+    source: https://github.com/beyond-all-reason/bar-lobby/releases/download/v$SNAPCRAFT_PROJECT_VERSION/BeyondAllReason-$SNAPCRAFT_PROJECT_VERSION.AppImage
+    source-type: file
+    override-build: |
+      chmod +x "$SNAPCRAFT_PART_SRC"/BeyondAllReason-*.AppImage
+      "$SNAPCRAFT_PART_SRC"/BeyondAllReason-*.AppImage --appimage-extract
+      cp -a squashfs-root/. "$SNAPCRAFT_PART_INSTALL"/
+      # electron-builder ships a setuid sandbox helper; strict-mode snaps
+      # can't use setuid binaries, so run Chromium with --no-sandbox instead
+      # (see the wrapper's exec line) and drop the now-unusable binary.
+      rm -f "$SNAPCRAFT_PART_INSTALL"/chrome-sandbox
+    organize:
+      bar-lobby.desktop: usr/share/applications/bar-lobby.desktop
+      bar-lobby.png: usr/share/icons/hicolor/512x512/apps/bar-lobby.png
+    stage-packages:
+      - libnss3
+      - libnspr4
+      - libatk1.0-0t64
+      - libatk-bridge2.0-0t64
+      - libatspi2.0-0t64
+      - libcups2t64
+      - libdrm2
+      - libgbm1
+      - libxkbcommon0
+      - libxcomposite1
+      - libxdamage1
+      - libxfixes3
+      - libxrandr2
+      - libpango-1.0-0
+      - libasound2t64
+      - libgtk-3-0t64
+
+  wrapper:
+    plugin: dump
+    source: snap/local
+    organize:
+      bar-lobby-wrapper: bar-lobby-wrapper
+    stage:
+      - bar-lobby-wrapper
+
+  desktop-fixup:
+    after: [bar-lobby, wrapper]
+    plugin: nil
+    override-build: |
+      craftctl default
+      # Point the desktop file's Exec/Icon at the in-snap wrapper/icon.
+      sed -i \
+        -e 's|^Exec=.*|Exec=bar-lobby-wrapper %U|' \
+        -e 's|^Icon=.*|Icon=${SNAP}/usr/share/icons/hicolor/512x512/apps/bar-lobby.png|' \
+        "$SNAPCRAFT_PRIME/usr/share/applications/bar-lobby.desktop"

@@ -1,0 +1,11 @@
+#!/bin/sh
+# chrome-sandbox is removed at build time (it needs setuid, which strict
+# snaps can't grant), so Chromium/Electron must run unsandboxed instead.
+# Data/config/cache are redirected into the snap's writable directories.
+export HOME="$SNAP_USER_COMMON"
+export XDG_CONFIG_HOME="$SNAP_USER_DATA/.config"
+export XDG_DATA_HOME="$SNAP_USER_DATA/.local/share"
+export XDG_CACHE_HOME="$SNAP_USER_DATA/.cache"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
+
+exec "$SNAP/bar-lobby" --no-sandbox "$@"

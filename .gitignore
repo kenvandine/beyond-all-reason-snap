@@ -1,0 +1,7 @@
+# Snapcraft build artifacts
+*.snap
+parts/
+stage/
+prime/
+.snapcraft/
+snapcraft.yaml.bak
