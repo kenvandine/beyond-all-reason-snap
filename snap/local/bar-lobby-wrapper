@@ -1,11 +1,15 @@
 #!/bin/sh
 # chrome-sandbox is removed at build time (it needs setuid, which strict
 # snaps can't grant), so Chromium/Electron must run unsandboxed instead.
-# Data/config/cache are redirected into the snap's writable directories.
+# Data/config/cache are redirected into SNAP_USER_COMMON (not
+# SNAP_USER_DATA, which is per-revision and gets wiped/replaced on every
+# refresh) since bar-lobby downloads the multi-GB Recoil engine and game
+# content under XDG_DATA_HOME and we don't want that re-fetched on every
+# snap update.
 export HOME="$SNAP_USER_COMMON"
-export XDG_CONFIG_HOME="$SNAP_USER_DATA/.config"
-export XDG_DATA_HOME="$SNAP_USER_DATA/.local/share"
-export XDG_CACHE_HOME="$SNAP_USER_DATA/.cache"
+export XDG_CONFIG_HOME="$SNAP_USER_COMMON/.config"
+export XDG_DATA_HOME="$SNAP_USER_COMMON/.local/share"
+export XDG_CACHE_HOME="$SNAP_USER_COMMON/.cache"
 mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
 
 # Electron/Chromium defaults to the X11 Ozone backend even on pure-Wayland
