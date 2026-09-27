@@ -63,6 +63,22 @@ parts:
       # can't use setuid binaries, so run Chromium with --no-sandbox instead
       # (see the wrapper's exec line) and drop the now-unusable binary.
       rm -f "$SNAPCRAFT_PART_INSTALL"/chrome-sandbox
+      # electron-updater detects $SNAP and intentionally disables itself,
+      # returning null from checkForUpdates() without emitting any events.
+      # bar-lobby's AutoUpdaterAPI awaits those events in a Promise that never
+      # resolves, hanging the Initial Setup wizard on "Downloading update".
+      # Snaps are updated via snapd anyway, so disable the in-app auto-updater
+      # by keeping AutoUpdaterAPI uninitialized (this.initialized = false).
+      # The replacement is byte-length identical so asar offsets remain valid.
+      python3 -c "
+      with open('$SNAPCRAFT_PART_INSTALL/resources/app.asar', 'rb+') as f:
+          content = f.read()
+          target = b'allowPrerelease=!1,this.initialized=!0'
+          replacement = b'allowPrerelease=!1,this.initialized=!1'
+          assert target in content, 'Target string not found in app.asar'
+          f.seek(0)
+          f.write(content.replace(target, replacement, 1))
+      "
       # The AppImage only ships its .desktop file at the root; install it
       # under the standard FHS path and point Exec/Icon at the in-snap
       # wrapper/icon (the upstream file points at absolute host paths).
@@ -72,6 +88,8 @@ parts:
         -e 's|^Icon=.*|Icon=${SNAP}/usr/share/icons/hicolor/512x512/apps/bar-lobby.png|' \
         "$SNAPCRAFT_PART_INSTALL"/bar-lobby.desktop \
         > "$SNAPCRAFT_PART_INSTALL"/usr/share/applications/bar-lobby.desktop
+    build-packages:
+      - python3
     stage-packages:
       - xkb-data
       - libnss3
