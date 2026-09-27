@@ -65,21 +65,31 @@ parts:
       # can't use setuid binaries, so run Chromium with --no-sandbox instead
       # (see the wrapper's exec line) and drop the now-unusable binary.
       rm -f "$SNAPCRAFT_PART_INSTALL"/chrome-sandbox
-      # electron-updater detects $SNAP and intentionally disables itself,
+      # 1. electron-updater detects $SNAP and intentionally disables itself,
       # returning null from checkForUpdates() without emitting any events.
       # bar-lobby's AutoUpdaterAPI awaits those events in a Promise that never
       # resolves, hanging the Initial Setup wizard on "Downloading update".
       # Snaps are updated via snapd anyway, so disable the in-app auto-updater
       # by keeping AutoUpdaterAPI uninitialized (this.initialized = false).
-      # The replacement is byte-length identical so asar offsets remain valid.
+      # 2. BAR Lobby hardcodes Fullscreen=0 as its default engine setting, which
+      # causes Recoil/Spring to launch in a decorated/framed window under Wayland.
+      # Default Fullscreen=1 instead so matches launch in fullscreen out-of-the-box.
+      # Both replacements are byte-length identical so asar offsets remain valid.
       python3 -c "
       with open('$SNAPCRAFT_PART_INSTALL/resources/app.asar', 'rb+') as f:
           content = f.read()
-          target = b'allowPrerelease=!1,this.initialized=!0'
-          replacement = b'allowPrerelease=!1,this.initialized=!1'
-          assert target in content, 'Target string not found in app.asar'
+          t1 = b'allowPrerelease=!1,this.initialized=!0'
+          r1 = b'allowPrerelease=!1,this.initialized=!1'
+          assert t1 in content, 'Auto-updater target not found in app.asar'
+          content = content.replace(t1, r1, 1)
+
+          t2 = b'ForceDisableShaders:0,Fullscreen:0,FullscreenEdgeMove:1'
+          r2 = b'ForceDisableShaders:0,Fullscreen:1,FullscreenEdgeMove:1'
+          assert t2 in content, 'Fullscreen default target not found in app.asar'
+          content = content.replace(t2, r2, 1)
+
           f.seek(0)
-          f.write(content.replace(target, replacement, 1))
+          f.write(content)
       "
       # The AppImage only ships its .desktop file at the root; install it
       # under the standard FHS path and point Exec/Icon at the in-snap
