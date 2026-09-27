@@ -23,7 +23,7 @@ launched with `--no-sandbox` via a small wrapper script
 ## Interfaces
 
 `opengl`, `wayland`, `x11`, `audio-playback`, `joystick`, `network`,
-`network-bind`, `home`, `removable-media`.
+`network-bind`, `home`, `removable-media`, `screen-inhibit-control`, `unity7`.
 
 ## Building locally
 
