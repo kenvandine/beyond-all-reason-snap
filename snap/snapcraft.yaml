@@ -1,7 +1,7 @@
 name: beyond-all-reason
 base: core24
 title: Beyond All Reason
-version: '0.17.0'
+version: '0.17.1'
 summary: Beyond All Reason - a free, open-source real-time strategy game
 license: GPL-2.0-or-later
 contact: https://github.com/kenvandine/beyonad-all-reason/issues
