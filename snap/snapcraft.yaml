@@ -52,6 +52,10 @@ parts:
     plugin: dump
     source: https://github.com/beyond-all-reason/bar-lobby/releases/download/v$SNAPCRAFT_PROJECT_VERSION/BeyondAllReason-$SNAPCRAFT_PROJECT_VERSION.AppImage
     source-type: file
+    # NOTE for automated version bumps: only change the top-level `version:`
+    # field. Do NOT add `source-tag`/`source-branch`/etc. here; they are only
+    # valid for git sources and crash snapcraft ("Unknown error: 'default'")
+    # for source-type: file. The version is already in the URL above.
     override-build: |
       chmod +x "$SNAPCRAFT_PART_SRC"/BeyondAllReason-*.AppImage
       "$SNAPCRAFT_PART_SRC"/BeyondAllReason-*.AppImage --appimage-extract
